@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>バスケクラブチーム 100問ルーレット</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Noto+Sans+JP:wght@700;900&display=swap');
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .basketball-theme {
+            background: radial-gradient(circle at center, #f97316 0%, #c2410c 100%);
+        }
+
+        .court-pattern {
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .spin-animation {
+            animation: shake 0.1s infinite;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            20% { transform: translate(-1px, -2px) rotate(-1deg); }
+            40% { transform: translate(-3px, 0px) rotate(1deg); }
+            60% { transform: translate(3px, 2px) rotate(0deg); }
+            80% { transform: translate(1px, -1px) rotate(1deg); }
+            100% { transform: translate(-1px, 2px) rotate(-1deg); }
+        }
+
+        .question-card {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.2);
+            border: 4px solid #000;
+        }
+
+        .btn-push {
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 8px 0 #7c2d12;
+        }
+
+        .btn-push:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #7c2d12;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4 court-pattern">
+
+    <!-- Header -->
+    <header class="text-center mb-8">
+        <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter text-orange-500 flex items-center justify-center gap-3" style="font-family: 'Black Ops One', cursive;">
+            <svg class="w-10 h-10 fill-current" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 17.5,6.1L15.3,8.3C14.4,7.5 13.3,7 12,7C10.7,7 9.6,7.5 8.7,8.3L6.5,6.1A8,8 0 0,1 12,4M4.2,7.7L6.4,9.9C5.8,10.5 5.5,11.2 5.5,12C5.5,12.8 5.8,13.5 6.4,14.1L4.2,16.3C3.5,15 3,13.6 3,12C3,10.4 3.5,9 4.2,7.7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M19.8,7.7C20.5,9 21,10.4 21,12C21,13.6 20.5,15 19.8,16.3L17.6,14.1C18.2,13.5 18.5,12.8 18.5,12C18.5,11.2 18.2,10.5 17.6,9.9L19.8,7.7M6.5,17.9L8.7,15.7C9.6,16.5 10.7,17 12,17C13.3,17 14.4,16.5 15.3,15.7L17.5,17.9A8,8 0 0,1 12,20A8,8 0 0,1 6.5,17.9Z" /></svg>
+            TEAM B-BALL ROULLETE
+        </h1>
+        <p class="text-gray-400 mt-2 font-bold">100 QUESTIONS FOR TEAM MATES</p>
+    </header>
+
+    <!-- Main Question Display -->
+    <div id="display-container" class="relative w-full max-w-2xl aspect-video flex items-center justify-center p-8 bg-orange-600 rounded-3xl question-card basketball-theme mb-10 overflow-hidden">
+        <!-- Decoration lines like a basketball -->
+        <div class="absolute inset-0 pointer-events-none opacity-20">
+            <div class="absolute top-1/2 left-0 w-full h-1 bg-black"></div>
+            <div class="absolute top-0 left-1/2 w-1 h-full bg-black"></div>
+            <div class="absolute inset-4 border-4 border-black rounded-full"></div>
+        </div>
+        
+        <p id="question-text" class="text-2xl md:text-4xl text-center font-black leading-tight z-10 drop-shadow-lg transition-all duration-200">
+            ボタンを押して<br>ルーレットを回そう！
+        </p>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex flex-col items-center gap-6 w-full max-w-xs">
+        <button id="spin-btn" class="w-full py-6 bg-orange-500 hover:bg-orange-400 text-black text-3xl font-black rounded-2xl btn-push uppercase tracking-widest">
+            SPIN !!
+        </button>
+
+        <div class="flex justify-between w-full px-2 text-sm font-bold text-gray-500 uppercase">
+            <span id="counter">Used: 0 / 100</span>
+            <button id="reset-btn" class="hover:text-white transition-colors underline">Reset History</button>
+        </div>
+    </div>
+
+    <!-- History Log (Modal/Overlay simple) -->
+    <div id="history-panel" class="mt-8 text-gray-500 text-center text-xs overflow-y-auto max-h-24 px-4">
+        <!-- Last few questions shown here -->
+    </div>
+
+    <script>
+        const questions = [
+            "好きなNBA選手（またはBリーグ選手）は誰？",
+            "バスケを始めたきっかけは何？",
+            "自分のプレーで一番の武器は？",
+            "試合の日の朝に必ず食べるものは？",
+            "今までで一番きつかった練習メニューは？",
+            "憧れのバッシュのモデルはある？",
+            "スリーポイントとダンク、どっちができるようになりたい？",
+            "試合前に聴くテンションが上がる曲は？",
+            "将来の夢を教えて！",
+            "自分を一言で表すと？",
+            "好きな食べ物は何？",
+            "苦手な食べ物は何？",
+            "実はバスケ以外で得意なスポーツは？",
+            "好きなアニメや漫画は何？",
+            "学校のテストで一番得意な教科は？",
+            "休み時間は何をして過ごしてる？",
+            "タイムマシンがあったら過去と未来、どっちに行きたい？",
+            "100万円もらったら何に使う？",
+            "無人島に一つだけ持っていくなら？",
+            "自分の性格は、ポジティブ？ネガティブ？",
+            "好きなテレビ番組やYouTubeチャンネルは？",
+            "部活のメンバーで一番面白いと思うのは誰？",
+            "監督やコーチに言われて一番心に残っている言葉は？",
+            "一生に一度は行ってみたい場所はどこ？",
+            "犬派？猫派？それとも別の動物？",
+            "好きな季節はいつ？",
+            "朝型？夜型？",
+            "もし魔法が一つだけ使えるなら、どんな魔法？",
+            "最近、一番笑ったことは何？",
+            "尊敬している人は誰？",
+            "コンビニに行くとつい買ってしまうものは？",
+            "自分を動物に例えるなら何？",
+            "得意な家事はある？",
+            "宝くじが当たったら、チームに何をプレゼントする？",
+            "好きな色は？",
+            "今の身長は？目標の身長は？",
+            "試合の遠征で行ってみたい都道府県は？",
+            "緊張した時の解消法は？",
+            "得意なゲーム（ビデオゲーム）はある？",
+            "もし一日だけ透明人間になれたら何をする？",
+            "今までで一番恥ずかしかった失敗談は？",
+            "好きな映画は何？",
+            "自分の名前の由来を知ってる？",
+            "好きな言葉（座右の銘）は？",
+            "お風呂で一番最初に洗うところはどこ？",
+            "最近ハマっていることは？",
+            "寝る前に必ずすることは？",
+            "理想の休日の過ごし方は？",
+            "部活のメンバーに直してほしいところはある？（冗談で！）",
+            "今の背番号、気に入ってる？",
+            "もしバスケ選手じゃなかったら、何部に入ってた？",
+            "冬の寒い日の練習、どうやってモチベ上げる？",
+            "夏休みの宿題は、先にやる派？最後にやる派？",
+            "今まででもらったプレゼントで一番嬉しかったものは？",
+            "好きな有名人は？",
+            "これだけは誰にも負けないという特技は？",
+            "スマホで一番使っているアプリは何？",
+            "好きな寿司のネタは何？",
+            "やってみたい髪型はある？",
+            "もし動物と話せるなら、何の動物と話したい？",
+            "給食で一番好きなメニューは？",
+            "今まで行った旅行で一番楽しかったのはどこ？",
+            "自分にとってのヒーローは？",
+            "苦手なことは何？",
+            "最近買った一番高いものは？",
+            "10年後の自分はどうなってると思う？",
+            "超能力が手に入るなら「空を飛ぶ」か「心が読める」どっち？",
+            "好きなフルーツは何？",
+            "今の悩みを一つ教えて！",
+            "初恋はいつ？（言える範囲で！）",
+            "好きなアイスの味は？",
+            "今の自分に点数をつけるなら100点満点中何点？",
+            "チームの中で一番「おしゃれ」だと思うのは誰？",
+            "チームの中で一番「真面目」だと思うのは誰？",
+            "最近泣いたことはある？",
+            "自分の顔で好きなパーツは？",
+            "幽霊って信じる？",
+            "好きなハンバーガーのチェーン店は？",
+            "将来、どんな大人になりたい？",
+            "自分の癖（くせ）って何かある？",
+            "地球最後の日、何を食べる？",
+            "もし入れ替われるなら、チームの誰になってみたい？",
+            "部活の帰り道によく話すことは？",
+            "自分の部屋はきれい？散らかってる？",
+            "得意なモノマネを披露して！（パスあり）",
+            "一日のうちで一番好きな時間は？",
+            "ドラえもんの道具で一つだけもらえるなら何？",
+            "好きな音楽のジャンルは？",
+            "これまでの人生で一番のピンチは何だった？",
+            "自分だけのこだわりって何かある？",
+            "もし映画の主役になれるなら、どんな役がいい？",
+            "宝物は何か持ってる？",
+            "緊張するとどうなる？",
+            "最近、誰かに感謝したことは？",
+            "チームのみんなに秘密にしていることはある？",
+            "このチームのここが好き！というポイントは？",
+            "これからの大会に向けての意気込みをどうぞ！",
+            "隣に座っている人の良いところを一つ言って！",
+            "前の回答者に質問を一つして！",
+            "最後に、みんなにメッセージをお願い！"
+        ];
+
+        let usedIndices = JSON.parse(localStorage.getItem('bball_used_indices') || '[]');
+        const display = document.getElementById('question-text');
+        const spinBtn = document.getElementById('spin-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const counter = document.getElementById('counter');
+        const historyPanel = document.getElementById('history-panel');
+
+        function updateUI() {
+            counter.innerText = `Used: ${usedIndices.length} / ${questions.length}`;
+            localStorage.setItem('bball_used_indices', JSON.stringify(usedIndices));
+        }
+
+        function spin() {
+            if (usedIndices.length >= questions.length) {
+                display.innerHTML = "全質問が終了しました！<br>リセットしてね。";
+                return;
+            }
+
+            spinBtn.disabled = true;
+            display.classList.add('spin-animation');
+            
+            let duration = 2000; // 2 seconds
+            let interval = 80;
+            let elapsed = 0;
+
+            const timer = setInterval(() => {
+                let randomIndex;
+                do {
+                    randomIndex = Math.floor(Math.random() * questions.length);
+                } while (usedIndices.includes(randomIndex) && usedIndices.length < questions.length - 1);
+                
+                display.innerText = questions[randomIndex];
+                elapsed += interval;
+
+                if (elapsed >= duration) {
+                    clearInterval(timer);
+                    finalizeSelection();
+                }
+            }, interval);
+        }
+
+        function finalizeSelection() {
+            let finalIndex;
+            const availableIndices = questions.map((_, i) => i).filter(i => !usedIndices.includes(i));
+            
+            finalIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+            
+            display.innerText = questions[finalIndex];
+            display.classList.remove('spin-animation');
+            usedIndices.push(finalIndex);
+            
+            // Add to history
+            const histItem = document.createElement('div');
+            histItem.innerText = `Q: ${questions[finalIndex]}`;
+            historyPanel.prepend(histItem);
+
+            updateUI();
+            spinBtn.disabled = false;
+        }
+
+        spinBtn.addEventListener('click', spin);
+
+        resetBtn.addEventListener('click', () => {
+            if(confirm('履歴をリセットしてもいいですか？')) {
+                usedIndices = [];
+                display.innerHTML = "ボタンを押して<br>ルーレットを回そう！";
+                historyPanel.innerHTML = "";
+                updateUI();
+            }
+        });
+
+        // Initial UI update
+        updateUI();
+    </script>
+</body>
+</html>
